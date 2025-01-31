@@ -19,34 +19,15 @@ export const mainNavLinks: NavLink[] = [
     icon: "i-uil-users-alt",
     roles: ['ADMIN']
   },
-  {
-    name: "Payments",
-    path: "/console/payments",
-    icon: "i-uil-money-bill",
-    roles: ['ADMIN']
-  },
-  {
-    name: "Email",
-    path: "/console/email",
-    icon: "i-uil-envelope",
-    roles: ['ADMIN']
-  }
 ];
 
 export const otherLinks: NavLink[] = [
   {
-    name: "Analytics",
-    path: "/console/analytics",
+    name: "APIs",
+    path: "/console/apis",
     icon: "i-uil-chart-line",
     roles: ['ADMIN']
   },
-  {
-    name: "Tasks",
-    path: "/console/tasks",
-    icon: "i-uil-clipboard-notes",
-    badge: "5",
-    roles: ['ADMIN', 'USER']
-  }
 ];
 
 export const accountLinks: NavLink[] = [
@@ -54,12 +35,6 @@ export const accountLinks: NavLink[] = [
     name: "Settings",
     path: "/console/settings",
     icon: "i-uil-setting",
-    roles: ['ADMIN', 'USER']
-  },
-  {
-    name: "Profile",
-    path: "/console/profile",
-    icon: "i-uil-user-circle",
     roles: ['ADMIN', 'USER']
   },
   {

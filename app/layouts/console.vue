@@ -4,24 +4,30 @@
     <ConsoleSidebar />
 
     <!-- Main Content -->
-    <div 
+    <div
       :class="[
         { 'md:ml-[219px]': !sidebarStore.isCollapsed },
         { 'md:ml-24': sidebarStore.isCollapsed },
-        { 'ml-0': isMobile }
+        { 'ml-0': isMobile },
       ]"
+      class="min-h-screen flex flex-col justify-between"
     >
-      <ConsoleHeader />
-      <div class="p-6">
-        <slot />
+      <div>
+        <ConsoleHeader />
+        <div class="p-6">
+          <slot />
+        </div>
       </div>
+
+      <!-- Footer -->
+      <ConsoleFooter />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from 'vue';
-import { debounce } from 'lodash-es';
+import { ref, onMounted, computed, onUnmounted } from "vue";
+import { debounce } from "lodash-es";
 
 const sidebarStore = useSidebarStore();
 const isMobile = ref(false);
@@ -33,9 +39,9 @@ onMounted(() => {
   if (isClient.value) {
     // Initial check
     checkMobileView();
-    
+
     // Add resize listener
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
   }
 });
 
@@ -59,7 +65,7 @@ const handleResize = debounce(() => {
 // Clean up
 onUnmounted(() => {
   if (isClient.value) {
-    window.removeEventListener('resize', handleResize);
+    window.removeEventListener("resize", handleResize);
   }
 });
 </script>

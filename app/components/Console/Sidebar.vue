@@ -43,7 +43,7 @@
           <ConsoleNavigationSection
             :links="filteredOtherLinks"
             :is-collapsed="sidebarStore.isCollapsed"
-            title="Other"
+            title="Playground"
             has-border
           />
 

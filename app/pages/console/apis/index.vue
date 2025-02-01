@@ -9,16 +9,14 @@
         </div>
 
         <!-- Create API Button -->
-        <div class="flex justify-end mb-8">
+        <div class="flex justify-end mb-4">
           <UButton
-            icon="i-heroicons-plus"
-            size="lg"
+            v-if="user?.role == 'ADMIN'"
             color="black"
-            to="/console/apis/create"
-            class="hover:shadow-lg transition-shadow duration-200"
-          >
-            Create New API
-          </UButton>
+            icon="i-heroicons-plus"
+            label="Create New API"
+            @click="navigateTo('/console/apis/create')"
+          />
         </div>
 
         <!-- API Cards Grid -->
@@ -34,8 +32,6 @@
 </template>
 
 <script setup lang="ts">
-import { useApiStore } from '~/stores/api';
-
-const apiStore = useApiStore();
-const apis = computed(() => apiStore.apis);
+const { data: apis } = await $apiFetch('/api/apis')
+const { user } = useAuth()
 </script>

@@ -3,9 +3,17 @@
     <div class="flex-1">
       <!-- Header -->
       <div>
-        <h2 class="text-xl font-semibold">
-          {{ api.name }}
-        </h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold">
+            {{ api.name }}
+          </h2>
+          <UBadge
+            :color="api.isPaid ? 'green' : 'blue'"
+            variant="subtle"
+          >
+            {{ api.isPaid ? 'Paid' : 'Free' }}
+          </UBadge>
+        </div>
         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-2 min-h-[2.5rem]">
           {{ api.description }}
         </p>
@@ -90,6 +98,7 @@ interface API {
   name: string;
   baseUrl: string;
   description: string;
+  isPaid: boolean;
   endpoints: Endpoint[];
 }
 

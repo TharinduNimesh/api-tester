@@ -1,7 +1,7 @@
 import type { Prisma, User } from "@prisma/client";
 
 export type Operation = "create" | "read" | "update" | "delete";
-export type Resource = "User" | "RefreshToken" | "Invitation";
+export type Resource = "User" | "RefreshToken" | "Invitation" | "API";
 export type Role = "ADMIN" | "USER" | "PUBLIC";
 
 interface BasePermission<T = any> {
@@ -12,7 +12,8 @@ interface BasePermission<T = any> {
   ) =>
     | Prisma.UserWhereInput
     | Prisma.RefreshTokenWhereInput
-    | Prisma.InvitationWhereInput;
+    | Prisma.InvitationWhereInput
+    | Prisma.APIWhereInput;
   check?: (user: User, data: T) => boolean | Promise<boolean>;
 }
 
@@ -29,11 +30,16 @@ interface InvitationPermission extends BasePermission {
   emailMatch?: (user: User) => string;
 }
 
+interface APIPermission extends BasePermission {
+  createdBy?: (user: User) => string;
+}
+
 const PERMISSIONS: {
   [R in Role]: {
     User?: UserPermission;
     RefreshToken?: RefreshTokenPermission;
     Invitation?: InvitationPermission;
+    API?: APIPermission;
   };
 } = {
   ADMIN: {
@@ -48,6 +54,10 @@ const PERMISSIONS: {
     Invitation: {
       operations: ["create", "read", "update", "delete"],
       description: "Full control over invitations",
+    },
+    API: {
+      operations: ["create", "read", "update", "delete"],
+      description: "Full control over APIs",
     },
   },
   USER: {
@@ -70,6 +80,13 @@ const PERMISSIONS: {
       conditions: (user) => ({
         email: user.email,
         status: "PENDING",
+      }),
+    },
+    API: {
+      operations: ["read"],
+      description: "Can view active APIs",
+      conditions: (user) => ({
+        isActive: true,
       }),
     },
   },
@@ -149,6 +166,7 @@ export function getConditions(
   | Prisma.UserWhereInput
   | Prisma.RefreshTokenWhereInput
   | Prisma.InvitationWhereInput
+  | Prisma.APIWhereInput
   | undefined {
   return PERMISSIONS[user.role]?.[resource]?.conditions?.(user);
 }

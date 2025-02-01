@@ -6,6 +6,7 @@ interface AuthResponse {
     email: string;
     name: string | null;
     role: string;
+    isPaid: boolean;
   };
   accessToken: string;
 }
@@ -81,11 +82,16 @@ export const useAuth = () => {
     }
   };
 
+  const setAccessToken = (token: string) => {
+    accessToken.value = token;
+  };
+
   return {
     user,
     accessToken,
     signIn,
     signUp,
     signOut,
+    setAccessToken,
   };
 };

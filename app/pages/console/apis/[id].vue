@@ -32,6 +32,23 @@
         <template v-else>
           <ApiHeader :api="api" @delete="confirmDelete" />
           <ApiDetails :api="api" />
+          
+          <!-- Paid API Notes -->
+          <div v-if="api.isPaid" class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg space-y-2">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-heroicons-information-circle" class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              <h3 class="font-semibold text-yellow-600 dark:text-yellow-400">Paid API Information</h3>
+            </div>
+            <p class="text-sm text-yellow-600 dark:text-yellow-400">
+              This is a paid API. Usage is subject to the following limits:
+            </p>
+            <ul class="text-sm text-yellow-600 dark:text-yellow-400 list-disc list-inside">
+              <li>Max requests per hour: 1000</li>
+              <li>Rate limit: 10 requests per second</li>
+              <li>Additional charges may apply for high usage</li>
+            </ul>
+          </div>
+
           <ApiEndpoints :api="api" />
         </template>
       </div>
@@ -61,42 +78,57 @@
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
-const apiStore = useApiStore()
 
 const pending = ref(true)
+const api = ref(null)
 const showDeleteModal = ref(false)
 
-onBeforeMount(async () => {
-  pending.value = true
-  await nextTick()
-  const apiExists = apiStore.getApiById(route.params.id as string)
-  if (!apiExists) {
+const fetchApi = async () => {
+  try {
+    const response = await $apiFetch(`/api/apis/${route.params.id}`)
+    api.value = response.data
+  } catch (error: any) {
     toast.add({
-      title: 'API Not Found',
-      description: 'The requested API could not be found.',
+      title: 'Error Loading API',
+      description: error.data?.message || 'Failed to load API details',
       icon: 'i-heroicons-exclamation-triangle',
       color: 'red'
     })
+    api.value = null
+  } finally {
+    pending.value = false
   }
-  pending.value = false
-})
+}
 
-const api = computed(() => apiStore.getApiById(route.params.id as string))
+onMounted(() => {
+  fetchApi()
+})
 
 const confirmDelete = () => {
   showDeleteModal.value = true
 }
 
-const handleDelete = () => {
+const handleDelete = async () => {
   if (!api.value?.id) return
-  apiStore.deleteApi(api.value.id)
-  showDeleteModal.value = false
-  router.push('/console/apis')
-  toast.add({
-    title: 'API Deleted',
-    description: 'The API has been successfully deleted',
-    icon: 'i-heroicons-check-circle',
-    color: 'red'
-  })
+  try {
+    await $fetch(`/api/apis/${api.value.id}`, {
+      method: 'DELETE'
+    })
+    showDeleteModal.value = false
+    router.push('/console/apis')
+    toast.add({
+      title: 'API Deleted',
+      description: 'The API has been successfully deleted',
+      icon: 'i-heroicons-check-circle',
+      color: 'green'
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Error Deleting API',
+      description: error.data?.message || 'Failed to delete API',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red'
+    })
+  }
 }
 </script>

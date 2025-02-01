@@ -26,7 +26,7 @@ export const otherLinks: NavLink[] = [
     name: "APIs",
     path: "/console/apis",
     icon: "i-uil-chart-line",
-    roles: ['ADMIN']
+    roles: ['ADMIN', 'USER']
   },
 ];
 

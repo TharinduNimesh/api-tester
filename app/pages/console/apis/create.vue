@@ -2,38 +2,36 @@
   <div>
     <NuxtLayout name="console">
       <div
+        v-if="user?.role === 'ADMIN'"
         class="p-6 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-gray-800 rounded-lg"
       >
         <!-- Header -->
-        <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <div class="flex items-center gap-4 mb-8">
+          <UButton
+            to="/console/apis"
+            color="gray"
+            variant="ghost"
+            icon="i-heroicons-arrow-left-20-solid"
+          />
           <div>
             <h1 class="text-2xl font-semibold">Create New API</h1>
             <p class="text-gray-600 dark:text-zinc-400">
               Configure your API details and endpoints
             </p>
           </div>
-          <div class="flex justify-end">
-            <UButton
-              to="/console/apis"
-              color="gray"
-              icon="i-heroicons-arrow-left"
-            >
-              Go Back
-            </UButton>
-          </div>
         </div>
 
         <!-- API Form -->
-        <form @submit.prevent="handleSubmit" class="space-y-8">
+        <UForm :schema="apiSchema" :state="apiData" class="space-y-8" @submit="handleSubmit">
           <!-- Basic API Details -->
           <div class="space-y-6">
             <h2 class="text-lg font-medium">Basic Details</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <UFormGroup label="API Name" name="name">
+              <UFormGroup label="API Name" name="name" required>
                 <UInput v-model="apiData.name" placeholder="Enter API name" />
               </UFormGroup>
 
-              <UFormGroup label="Base URL" name="baseUrl">
+              <UFormGroup label="Base URL" name="baseUrl" required>
                 <UInput
                   v-model="apiData.baseUrl"
                   placeholder="https://api.example.com/v1"
@@ -47,6 +45,20 @@
                 placeholder="Describe your API"
               />
             </UFormGroup>
+
+            <div>
+              <UFormGroup label="API Access">
+                <div class="space-y-2">
+                  <UToggle v-model:modelValue="apiData.isPaid">
+                    <template #on>Paid API</template>
+                    <template #off>Free API</template>
+                  </UToggle>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Note: Individual endpoints can be set as free or paid regardless of API setting
+                  </p>
+                </div>
+              </UFormGroup>
+            </div>
           </div>
 
           <!-- Endpoints Section -->
@@ -115,37 +127,35 @@
             <UButton to="/console/apis" color="gray"> Cancel </UButton>
             <UButton type="submit" color="black"> Create API </UButton>
           </div>
-        </form>
+        </UForm>
+      </div>
+      
+      <div v-else class="p-6">
+        <UCard>
+          <template #header>
+            <h2 class="text-xl font-semibold">Access Denied</h2>
+          </template>
+          <p>You don't have permission to access this page.</p>
+          <template #footer>
+            <UButton to="/console/apis" color="black">
+              Back to APIs
+            </UButton>
+          </template>
+        </UCard>
       </div>
     </NuxtLayout>
   </div>
 </template>
 
 <script setup lang="ts">
-interface Parameter {
-  name: string;
-  type: "query" | "body" | "header" | "path";
-  required: boolean;
-  description: string;
-  defaultValue?: string;
-}
+import { apiSchema } from '~/schemas/api'
+import type { Endpoint, Parameter } from '~/types'
 
-interface Endpoint {
-  id: string;
-  name: string;
-  path: string;
-  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-  parameters: Parameter[];
-  description: string;
-}
+definePageMeta({
+  middleware: ['admin'],
+})
 
-interface API {
-  id?: string;
-  name: string;
-  baseUrl: string;
-  description: string;
-  endpoints: Endpoint[];
-}
+const { user } = useAuth()
 
 const apiStore = useApiStore();
 const router = useRouter();
@@ -154,6 +164,7 @@ const apiData = ref<API>({
   name: "",
   baseUrl: "",
   description: "",
+  isPaid: false,
   endpoints: [],
 });
 
@@ -165,6 +176,8 @@ function createEndpoint(): Endpoint {
     method: "GET",
     parameters: [],
     description: "",
+    isPaid: false,
+    requestLimit: null,
   };
 }
 
@@ -226,6 +239,11 @@ function deleteEndpoint() {
 }
 
 function saveEndpoint(endpoint: Endpoint) {
+  // Set request limit to null if endpoint is paid
+  if (endpoint.isPaid) {
+    endpoint.requestLimit = null;
+  }
+  
   if (editingEndpointIndex.value === null) {
     // Add new endpoint
     apiData.value.endpoints.push(endpoint);
@@ -241,29 +259,17 @@ function saveEndpoint(endpoint: Endpoint) {
 
 async function handleSubmit() {
   try {
-    // Add the new API to the store
-    const newApi = apiStore.addApi(apiData.value);
-    console.log("API created successfully:", newApi);
-
-    // Show success message
-    const toast = useToast();
-    toast.add({
-      title: "Success",
-      description: "API created successfully",
-      color: "green",
+    const response = await $apiFetch('/api/apis/create', {
+      method: 'POST',
+      body: apiData.value,
     });
 
-    // Navigate back to the APIs list
-    await router.push("/console/apis");
+    if (response) {
+      apiStore.addAPI(apiData.value);
+      router.push('/console/apis');
+    }
   } catch (error) {
-    console.error("Error creating API:", error);
-    // Show error message
-    const toast = useToast();
-    toast.add({
-      title: "Error",
-      description: "Failed to create API",
-      color: "red",
-    });
+    console.error('API creation error:', error);
   }
 }
 </script>
